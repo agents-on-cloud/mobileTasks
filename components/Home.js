@@ -9,15 +9,27 @@ import {
   SafeAreaView,
   Modal,
   Pressable,
+  TextInput,
 } from 'react-native';
+import {RadioButton} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import {useDispatch, useSelector} from 'react-redux';
-import {getAssignedTaskas, getGeneralTaskas} from '../reducers/tasks';
+import {
+  getTaskas,
+  getTodayTasks,
+  getAllTasks,
+  getTomorrowTasks,
+  getThisWeek,
+  getLastWeek,
+} from '../reducers/tasks';
+
 import Task from './Task';
 import axios from 'axios';
 
 export default function Home({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [checked, setChecked] = useState('All');
+
   const dispatch = useDispatch();
 
   ////////
@@ -38,21 +50,42 @@ export default function Home({navigation}) {
     }
   }, [state.user_id]);
 
+  useEffect(() => {
+    setModalVisible(false);
+    if (checked === 'All') {
+      dispatch(getAllTasks());
+    } else if (checked === 'Today') {
+      dispatch(getTodayTasks());
+    } else if (checked === 'Tomorrow') {
+      dispatch(getTomorrowTasks());
+    } else if (checked === 'This week') {
+      dispatch(getThisWeek());
+    } else if (checked === 'Last week') {
+      dispatch(getLastWeek());
+    }
+  }, [checked]);
+
   const getAssigned = async () => {
-    const data = await axios.get(
-      `http://192.168.1.129:30122/tasks/assignedToMe/${state.user_id}`,
-    );
-    data.data.forEach(element => {
-      element.created =
-        element.created_date.split('-').reverse().join('-') +
-        ' at ' +
-        element.created_time;
-      element.deadline =
-        element.due_date.split('-').reverse().join('-') +
-        ' at ' +
-        element.due_time;
-    });
-    dispatch(getAssignedTaskas(data.data));
+    try {
+      console.log('send request');
+      const data = await axios.get(
+        `http://192.168.1.129:30122/tasks/assignedToMe/${state.user_id}`,
+      );
+      console.log(data.data);
+      data.data.forEach(element => {
+        element.created =
+          element.created_date.split('-').reverse().join('-') +
+          ' at ' +
+          element.created_time;
+        element.deadline =
+          element.due_date.split('-').reverse().join('-') +
+          ' at ' +
+          element.due_time;
+      });
+      dispatch(getTaskas(data.data));
+    } catch (error) {
+      console.log('error here');
+    }
   };
   const getGeneral = async () => {
     const data = await axios.get(
@@ -81,7 +114,7 @@ export default function Home({navigation}) {
         ' at ' +
         element.due_time;
     });
-    dispatch(getGeneralTaskas([...data.data, ...res.data]));
+    dispatch(getTaskas([...data.data, ...res.data]));
   };
 
   const getCreated = async () => {
@@ -111,10 +144,12 @@ export default function Home({navigation}) {
         ' at ' +
         element.due_time;
     });
-    dispatch(getGeneralTaskas([...data.data, ...res.data]));
+    dispatch(getTaskas([...data.data, ...res.data]));
   };
 
   const changeTab = str => {
+    setModalVisible(false);
+    setChecked('All');
     if (str === 'assigned') {
       getAssigned();
     } else if (str === 'general') {
@@ -122,6 +157,10 @@ export default function Home({navigation}) {
     } else if (str === 'created') {
       getCreated();
     }
+  };
+
+  const createTask = () => {
+    navigation.navigate('createTask');
   };
 
   return (
@@ -165,16 +204,20 @@ export default function Home({navigation}) {
             </View>
           </TouchableOpacity>
         </View>
+        <TextInput placeholder="enter" />
         <View style={style.title}>
           <Text> tasks is {state.tasks.length} </Text>
-          <Icon
-            name="filter"
-            size={30}
-            color="#009688"
-            onPress={() => {
-              setModalVisible(!modalVisible);
-            }}
-          />
+          <View style={style.icons}>
+            <Icon
+              name="filter"
+              size={30}
+              color="#009688"
+              onPress={() => {
+                setModalVisible(!modalVisible);
+              }}
+            />
+            <Icon name="plus" size={30} color="#009688" onPress={createTask} />
+          </View>
         </View>
         <ScrollView horizontal={true} contentContainerStyle={{flex: 1}}>
           <FlatList
@@ -189,12 +232,43 @@ export default function Home({navigation}) {
         <Modal animationType="slide" transparent={true} visible={modalVisible}>
           <View style={style.centeredView2}>
             <View style={style.modalView}>
-              <Text style={style.modalText}>Hello World!</Text>
               <Pressable
-                style={[style.button, style.buttonClose]}
+                style={style.button}
                 onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={style.textStyle}>Hide Modal</Text>
+                <Text style={style.textStyle}>Close</Text>
               </Pressable>
+              <Text style={style.modalText}>Select Time Filter</Text>
+              <View>
+                <RadioButton.Group
+                  onValueChange={value => setChecked(value)}
+                  value={checked}>
+                  <RadioButton.Item
+                    label="All"
+                    value="All"
+                    style={style.radio}
+                  />
+                  <RadioButton.Item
+                    label="Today"
+                    value="Today"
+                    style={style.radio}
+                  />
+                  <RadioButton.Item
+                    label="Tomorrow"
+                    value="Tomorrow"
+                    style={style.radio}
+                  />
+                  <RadioButton.Item
+                    label="This week"
+                    value="This week"
+                    style={style.radio}
+                  />
+                  <RadioButton.Item
+                    label="Last week"
+                    value="Last week"
+                    style={style.radio}
+                  />
+                </RadioButton.Group>
+              </View>
             </View>
           </View>
         </Modal>
@@ -214,13 +288,13 @@ const style = StyleSheet.create({
     flexDirection: 'row',
   },
   tabView: {
-    marginRight: 10,
-    marginLeft: 10,
-    marginTop: 10,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingRight: 10,
-    paddingLeft: 10,
+    marginRight: 5,
+    marginLeft: 5,
+    marginTop: 5,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingRight: 5,
+    paddingLeft: 5,
     backgroundColor: '#009688',
     borderRadius: 10,
     borderWidth: 1,
@@ -228,13 +302,13 @@ const style = StyleSheet.create({
   },
 
   filter: {
-    marginRight: 10,
-    marginLeft: 10,
-    marginTop: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
-    paddingRight: 10,
-    paddingLeft: 10,
+    marginLeft: 5,
+    marginLeft: 5,
+    marginTop: 5,
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingRight: 5,
+    paddingLeft: 5,
     backgroundColor: '#009688',
     borderRadius: 10,
     borderWidth: 1,
@@ -247,11 +321,10 @@ const style = StyleSheet.create({
     fontSize: 15,
   },
 
-  tab: {},
   tabText: {
     color: 'white',
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 14,
   },
   centeredView2: {
     flex: 1,
@@ -261,19 +334,24 @@ const style = StyleSheet.create({
   },
 
   title: {
-    width: '80%',
+    width: '90%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
 
+  icons: {
+    width: '20%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   modalView: {
     width: '100%',
-    // margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
+    padding: 10,
+    paddingTop: 20,
+    alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOffset: {
       width: 1,
@@ -282,5 +360,33 @@ const style = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  button: {
+    width: '90%',
+    backgroundColor: 'red',
+    marginRight: 10,
+    marginLeft: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingRight: 10,
+    paddingLeft: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'red',
+  },
+  textStyle: {
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
+  },
+  modalText: {
+    width: '100%',
+    fontSize: 20,
+    marginTop: 10,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  radio: {
+    flexDirection: 'row-reverse',
   },
 });

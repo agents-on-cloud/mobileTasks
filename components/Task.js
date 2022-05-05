@@ -12,8 +12,11 @@ export default function Task({task, navigation}) {
   return (
     <TouchableOpacity style={style.taskVue}>
       <View style={style.task}>
-        <Text> {task.subject } </Text>
-        <Text> {task.description } </Text>
+        <Text style={style.text}> {task.subject } </Text>
+        <Text style={style.text}> {task.description } </Text>
+        <Text style={style.text}> {task.created_date } </Text>
+        <Text style={style.text}> {task.due_date } </Text>
+
 
       </View>
     </TouchableOpacity>
@@ -31,4 +34,7 @@ const style = StyleSheet.create({
     // flexDirection: 'row',
     // justifyContent: 'space-between',
   },
+  text :{
+    fontSize:18
+  }
 });
