@@ -130,6 +130,19 @@ export default function CreateTask({navigation}) {
     setMinutes(num);
   };
 
+  ///////////////////// restPage ///////////////////////////////
+  const restPage = () => {
+    setSubject('');
+    setDescreption('');
+    setActivePriority(3);
+    setDue_date('');
+    setDue_time('');
+    setHour('');
+    setMinutes('');
+    setSelctedUsers([]);
+    setAssigned([]);
+  };
+
   ///////////////////// create task  //////////////////////////
 
   const createTask = async () => {
@@ -216,29 +229,42 @@ export default function CreateTask({navigation}) {
       if (claimed) {
         console.log(users_id);
         const res = await axios.post(
-          'http://192.168.1.129:30122/tasks',
+          'http://192.168.85.37:30122/tasks',
           newTask,
         );
         if (res.status === 201) {
           const as = await axios.post(
-            'http://192.168.1.129:30122/tasks/task/assigneUser',
+            'http://192.168.85.37:30122/tasks/task/assigneUser',
             {task_id: res.data.task_id, user_id: users_id},
           );
         }
       } else {
         users_id.forEach(async ele => {
           const res = await axios.post(
-            'http://192.168.1.129:30122/tasks',
+            'http://192.168.85.37:30122/tasks',
             newTask,
           );
-          if(res.status === 201){
+          if (res.status === 201) {
             const as = await axios.post(
-              'http://192.168.1.129:30122/tasks/task/assigneUser',
+              'http://192.168.85.37:30122/tasks/task/assigneUser',
               {task_id: res.data.task_id, user_id: [ele]},
             );
           }
         });
       }
+
+      Alert.alert(
+        'Created Successfully',
+        `Your Task (${newTask.subject}) was Created Successfully`,
+        [
+          {
+            text: 'Create another task',
+            onPress: restPage,
+            style: 'cancel',
+          },
+          {text: 'Go Home', onPress: () => navigation.navigate('Home')},
+        ],
+      );
     } catch (error) {
       console.log('error');
     }
@@ -257,6 +283,7 @@ export default function CreateTask({navigation}) {
                 style={style.subjectInput}
                 placeholder="enter task subject"
                 onChangeText={changeSubject}
+                value={subject}
               />
             </View>
             <View style={style.subject}>
@@ -267,6 +294,7 @@ export default function CreateTask({navigation}) {
                 multiline={true}
                 numberOfLines={3}
                 onChangeText={changeDescreption}
+                value={descreption}
               />
             </View>
             <View style={style.priority_con}>
@@ -531,7 +559,7 @@ const style = StyleSheet.create({
   },
   tabText: {
     textAlign: 'center',
-    color: 'black',
+    color: '#000000',
     fontSize: 13,
   },
 
@@ -560,7 +588,7 @@ const style = StyleSheet.create({
   create_text_val: {
     width: 130,
     fontSize: 15,
-    color: 'black',
+    color: '#000000',
     textAlign: 'center',
   },
   centeredView2: {

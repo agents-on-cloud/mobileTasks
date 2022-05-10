@@ -28,6 +28,7 @@ import axios from 'axios';
 
 export default function Home({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('assigned');
   const [checked, setChecked] = useState('All');
 
   const dispatch = useDispatch();
@@ -69,9 +70,9 @@ export default function Home({navigation}) {
     try {
       console.log('send request');
       const data = await axios.get(
-        `http://192.168.1.129:30122/tasks/assignedToMe/${state.user_id}`,
+        `http://192.168.85.37:30122/tasks/assignedToMe/${state.user_id}`,
       );
-      console.log(data.data);
+      // console.log(data.data);
       data.data.forEach(element => {
         element.created =
           element.created_date.split('-').reverse().join('-') +
@@ -89,7 +90,7 @@ export default function Home({navigation}) {
   };
   const getGeneral = async () => {
     const data = await axios.get(
-      `http://192.168.1.129:30122/tasks/generalTasks/${state.user_id}`,
+      `http://192.168.85.37:30122/tasks/generalTasks/${state.user_id}`,
     );
     data.data.forEach(element => {
       element.created =
@@ -102,7 +103,7 @@ export default function Home({navigation}) {
         element.due_time;
     });
     const res = await axios.get(
-      'http://192.168.1.129:30122/tasks/allGeneralTasks/',
+      'http://192.168.85.37:30122/tasks/allGeneralTasks/',
     );
     res.data.forEach(element => {
       element.created =
@@ -119,7 +120,7 @@ export default function Home({navigation}) {
 
   const getCreated = async () => {
     const data = await axios.get(
-      `http://192.168.1.129:30122/tasks/myTasks/${state.user_id}`,
+      `http://192.168.85.37:30122/tasks/myTasks/${state.user_id}`,
     );
     data.data.forEach(element => {
       element.created =
@@ -132,7 +133,7 @@ export default function Home({navigation}) {
         element.due_time;
     });
     const res = await axios.get(
-      `http://192.168.1.129:30122/tasks/myCompletedTasks/${state.user_id}`,
+      `http://192.168.85.37:30122/tasks/myCompletedTasks/${state.user_id}`,
     );
     res.data.forEach(element => {
       element.created =
@@ -148,6 +149,7 @@ export default function Home({navigation}) {
   };
 
   const changeTab = str => {
+    setSelectedCategory(str);
     setModalVisible(false);
     setChecked('All');
     if (str === 'assigned') {
@@ -164,7 +166,7 @@ export default function Home({navigation}) {
   };
 
   return (
-    <ScrollView>
+    <ScrollView  >
       <View style={style.container}>
         {/* <View>
           <TouchableOpacity style={style.filter} onPress={() => {
@@ -177,7 +179,11 @@ export default function Home({navigation}) {
         </View> */}
         <View style={style.tabs}>
           <TouchableOpacity
-            style={style.tabView}
+            style={
+              selectedCategory === 'assigned'
+                ? [style.tabView, style.activeTab]
+                : style.tabView
+            }
             onPress={() => {
               changeTab('assigned');
             }}>
@@ -186,7 +192,11 @@ export default function Home({navigation}) {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
-            style={style.tabView}
+            style={
+              selectedCategory === 'general'
+                ? [style.tabView, style.activeTab]
+                : style.tabView
+            }
             onPress={() => {
               changeTab('general');
             }}>
@@ -195,7 +205,11 @@ export default function Home({navigation}) {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
-            style={style.tabView}
+            style={
+              selectedCategory === 'created'
+                ? [style.tabView, style.activeTab]
+                : style.tabView
+            }
             onPress={() => {
               changeTab('created');
             }}>
@@ -204,10 +218,16 @@ export default function Home({navigation}) {
             </View>
           </TouchableOpacity>
         </View>
-        <TextInput placeholder="enter" />
         <View style={style.title}>
-          <Text> tasks is {state.tasks.length} </Text>
+          <Text> number of tasks is : {state.tasks.length} </Text>
           <View style={style.icons}>
+            <Text
+              onPress={() => {
+                setModalVisible(!modalVisible);
+              }}>
+              {' '}
+              {checked}{' '}
+            </Text>
             <Icon
               name="filter"
               size={30}
@@ -224,7 +244,13 @@ export default function Home({navigation}) {
             style={{flex: 1}}
             data={state.tasks}
             renderItem={({item}) => {
-              return <Task task={item} navigation={navigation} />;
+              return (
+                <Task
+                  task={item}
+                  type={selectedCategory}
+                  navigation={navigation}
+                />
+              );
             }}
             keyExtractor={item => item.id}
           />
@@ -295,9 +321,13 @@ const style = StyleSheet.create({
     paddingBottom: 10,
     paddingRight: 5,
     paddingLeft: 5,
-    backgroundColor: '#009688',
+    backgroundColor: '#04b9a7',
     borderRadius: 10,
     borderWidth: 1,
+    borderColor: '#04b9a7',
+  },
+  activeTab: {
+    backgroundColor: '#009688',
     borderColor: '#009688',
   },
 
@@ -341,9 +371,10 @@ const style = StyleSheet.create({
   },
 
   icons: {
-    width: '20%',
+    width: '40%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   modalView: {
     width: '100%',
