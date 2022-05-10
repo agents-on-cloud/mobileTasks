@@ -4,7 +4,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
+  Image,
   TouchableOpacity,
   Alert,
   Modal,
@@ -29,6 +29,7 @@ export default function TaskFullView({route, navigation}) {
   const [assigned, setAssigned] = useState([]);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [checked, setChecked] = useState('');
+  const [seeMore, setSeeMore] = useState(false);
 
   const dispatch = useDispatch();
   let {task_id, type} = route.params;
@@ -116,7 +117,7 @@ export default function TaskFullView({route, navigation}) {
   };
 
   const openDialogDeleteTask = () => {
-    Alert.alert('Claime this task', `Do you want to take this task ?`, [
+    Alert.alert('Delete this task', `Do you want to delete this task ?`, [
       {
         text: 'Cancel',
         style: 'cancel',
@@ -359,19 +360,46 @@ export default function TaskFullView({route, navigation}) {
                 </Text>
               </View>
             </View>
-            <ScrollView style={{maxHeight: 100, marginVertical: 20}}>
-              <View>
-                <Text style={{color: 'rgb(0, 0, 0)', fontSize: 15}}>
-                  Description :
+            <View style={{marginVertical: 20}}>
+              <Text
+                style={{color: 'rgb(0, 0, 0)', fontSize: 16, marginBottom: 15}}>
+                Description :
+              </Text>
+              {seeMore ? (
+                <View>
+                  <Text>
+                    {task.description}
+                    <Text
+                      style={{color: 'blue', fontWeight: 'bold'}}
+                      onPress={() => {
+                        setSeeMore(false);
+                      }}>
+                      see less
+                    </Text>
+                  </Text>
+                </View>
+              ) : task.description.split(' ').length > 30 ? (
+                <View>
+                  <Text>
+                    {task.description.split(' ').slice(0, 30).join(' ')}
+                    <Text
+                      style={{color: 'blue', fontWeight: 'bold'}}
+                      onPress={() => {
+                        setSeeMore(true);
+                      }}>
+                      see more
+                    </Text>
+                  </Text>
+                </View>
+              ) : (
+                <Text>
+                  {task.description.split(' ').slice(0, 30).join(' ')}
                 </Text>
-                <Text style={{color: 'rgb(0, 0, 0)', fontSize: 13}}>
-                  {task.description}
-                </Text>
-              </View>
-            </ScrollView>
+              )}
+            </View>
           </View>
           {/* ---------------------------- assigned users  ---------------------------------------------------- */}
-
+          
           <View style={style.assinee_con}>
             <View style={style.assigned_heades}>
               <Text style={style.assigned_text}>Assigned to :</Text>
@@ -405,7 +433,14 @@ export default function TaskFullView({route, navigation}) {
           {/* -------------------------------- comments  ------------------------------------------------ */}
 
           <View>
-            <Comments />
+            <Comments
+              navigation={navigation}
+              id={task.task_id}
+              type="task"
+              taskCreator={task.creator}
+              userId={state.user_id}
+              userName={state.user_name}
+            />
           </View>
 
           {/* --------------------------------- Modal ----------------------------------------------- */}

@@ -8,15 +8,123 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  FlatList,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
+import Comment from './Comment';
 import axios from 'axios';
 
-export default function Comments() {
+export default function Comments({
+  navigation,
+  id,
+  type,
+  taskCreator,
+  userId,
+  userName,
+}) {
+  const [comments, setComments] = useState([]);
+  const [str, setStr] = useState('');
+  useEffect(() => {
+    if (id) {
+      getComments();
+    }
+    async function getComments() {
+      try {
+        const res = await axios.get(
+          `http://192.168.85.37:30122/comments/task/${id}/${type}`,
+        );
+        console.log(`http://192.168.85.37:30122/comments/task/${id}/${type}`);
+        setComments(res.data);
+      } catch (error) {
+        console.log('error');
+      }
+    }
+  }, [id]);
+
+  const handleInput = text => {
+    setStr(text);
+  };
+
+  const addComment = async () => {
+    try {
+      const response = await axios.post(
+        `http://192.168.85.37:30122/comments/addComment`,
+        {
+          task_id: id,
+          user_id: userId,
+          user_name: userName,
+          comment: str,
+          type: type,
+        },
+      );
+      if (response.status === 201) {
+          setStr("")
+        setComments([...comments, response.data]);
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   return (
-    <View>
-      <Text>hello comments</Text>
+    <View style={style.container}>
+      <Text
+        style={{fontSize: 18, color: 'black', margin: 4, paddingVertical: 15}}>
+        Comments :
+      </Text>
+      <View style={{alignItems: 'center'}}>
+        <View style={{width: '70%' , backgroundColor:"rgb(245, 245, 245)"}}>
+          <TextInput
+            onChangeText={handleInput}
+            value={str}
+            placeholder="Enter your comment here"
+          />
+        </View>
+        <TouchableOpacity style={style.add_comment_btn} onPress={addComment}>
+          <View>
+            <Text style={style.add_comment_text}>Add comment</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={comments}
+        renderItem={({item, index}) => {
+          return (
+            <Comment
+              comment={item}
+              comments={comments}
+              setComments={setComments}
+              taskCreator={taskCreator}
+              userId={userId}
+            />
+          );
+        }}
+        keyExtractor={item => item.comment.id}
+      />
     </View>
   );
 }
+
+const style = StyleSheet.create({
+  container: {
+    minHeight: 140,
+    backgroundColor: 'white',
+  },
+  add_comment_btn: {
+    marginTop: 10,
+    marginBottom:20,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingRight: 40,
+    paddingLeft: 40,
+    backgroundColor: '#2A416A',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#2A416A',
+  },
+  add_comment_text: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+});
