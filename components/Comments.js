@@ -58,7 +58,7 @@ export default function Comments({
         },
       );
       if (response.status === 201) {
-          setStr("")
+        setStr('');
         setComments([...comments, response.data]);
       }
     } catch (error) {
@@ -72,8 +72,13 @@ export default function Comments({
         style={{fontSize: 18, color: 'black', margin: 4, paddingVertical: 15}}>
         Comments :
       </Text>
-      <View style={{alignItems: 'center'}}>
-        <View style={{width: '70%' , backgroundColor:"rgb(245, 245, 245)"}}>
+      <View
+        style={{
+          alignItems: 'center',
+          borderBottomWidth: 2,
+          borderColor: '#eee',
+        }}>
+        <View style={{width: '70%', backgroundColor: 'rgb(245, 245, 245)'}}>
           <TextInput
             onChangeText={handleInput}
             value={str}
@@ -96,6 +101,7 @@ export default function Comments({
               setComments={setComments}
               taskCreator={taskCreator}
               userId={userId}
+              userName={userName}
             />
           );
         }}
@@ -112,7 +118,7 @@ const style = StyleSheet.create({
   },
   add_comment_btn: {
     marginTop: 10,
-    marginBottom:20,
+    marginBottom: 20,
     paddingTop: 8,
     paddingBottom: 8,
     paddingRight: 40,
